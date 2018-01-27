@@ -21,9 +21,15 @@ async function apiGetUsers(body) {
   var ret = [];
   if ((req['user_mask'] != undefined) && (typeof req['user_mask'] == 'string')) {
     var userMask = req.user_mask.startsWith('@') ? req.user_mask.substr(1) : req.user_mask;
-    result = await queryDB(req.user_mask.startsWith('@') ? "select * from users where lower(username) REGEXP ? " : "select * from users where lower(name) REGEXP ? ", [ userMask ]);
-    while (result.length > 0) {
-      var row = result.shift(); 
+    var pR, fields;
+    try {
+      [pR, fields] = await queryDB(req.user_mask.startsWith('@') ? "select * from users where lower(username) REGEXP ? " : "select * from users where lower(name) REGEXP ? ", [ userMask ]);
+    } catch (e) {
+      console.log(e);
+      return ret;
+    };
+    while (pR.length > 0) {
+      var row = pR.shift(); 
       ret.push({ 'id': row.id, 'name': row.name, 'username': row.username});
     };
   };
@@ -35,9 +41,15 @@ async function apiGetChats(body) {
   var req = qs.parse(body);
   var ret = [];
   if ((req['chatgroup_mask'] != undefined) && (typeof req['chatgroup_mask'] == 'string')) {
-    result = await queryDB("select * from chatgroups where lower(name) REGEXP ? " , [ req.chatgroup_mask ]);
-    while (result.length > 0) {
-      var row = result.shift(); 
+    var pR, fields;
+    try {
+      [ pR, fields ] = await queryDB("select * from chatgroups where lower(name) REGEXP ? " , [ req.chatgroup_mask ]);
+    } catch (e) {
+      console.log(e);
+      return ret;
+    };
+    while (pR.length > 0) {
+      var row = pR.shift(); 
       ret.push({ 'id': row.id, 'name': row.name});
     };
   };
