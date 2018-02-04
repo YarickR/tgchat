@@ -30,7 +30,7 @@ async function apiGetUsers(body) {
       return ret;
     };
     while (pR.length > 0) {
-      var row = pR.shift(); 
+      var row = pR.shift();
       ret.push({ 'id': row.id, 'name': row.name, 'username': row.username});
     };
   };
@@ -50,7 +50,7 @@ async function apiGetChats(body) {
       return ret;
     };
     while (pR.length > 0) {
-      var row = pR.shift(); 
+      var row = pR.shift();
       ret.push({ 'id': row.id, 'name': row.name});
     };
   };
@@ -68,7 +68,7 @@ async function apiGetMsgs(body) {
     var userMask = req.user_mask.startsWith('@') ? req.user_mask.substr(1) : req.user_mask;
     conds.push(req.user_mask.startsWith('@') ? "lower(u.username) REGEXP ? " : "lower(u.name) REGEXP ? ");
     condValues.push(userMask);
-  }  
+  }
   if ((req['chatgroup_mask'] != undefined) && (typeof req['chatgroup_mask'] == 'string')) {
     conds.push("lower(c.name) REGEXP ?");
     condValues.push(req['chatgroup_mask']);
@@ -100,6 +100,7 @@ async function apiGetMsgs(body) {
   q += conds.length > 0 ? " and " + conds.join(" and ") : "";
   q += " and m.sender_id=u.id and m.group_id=c.id order by m.id " + order + " limit 100";
   console.log(q);
+  console.log(condValues);
   try  {
     var pR, fields;
     [ pR, fields ]  = await queryDB(q ,  condValues);
@@ -109,7 +110,7 @@ async function apiGetMsgs(body) {
   };
 
   while (pR.length > 0) {
-    var row = pR.shift(); 
+    var row = pR.shift();
     var retRow = {}
     fields.forEach((field) => { retRow[field.name] = row[field.name]; });
     ret.push(retRow);
@@ -123,6 +124,8 @@ var dispatcherTable  = {
 }
 
 function processRequest(url, body, response) {
+  console.log("URL:" + url);
+  console.log("BODY:" + body);
   var parts = url.split('/');
   parts.shift(); // getting rid of first empty string
   var dispPtr = dispatcherTable;
@@ -147,6 +150,7 @@ function processRequest(url, body, response) {
       };
     }
   };
+  console.log("===");
 }
 
 function httpListener(request, response) {
@@ -157,6 +161,4 @@ function httpListener(request, response) {
 
 var con = mysql.createConnection(config.dbConfig);
 con.connect(function (err) { if (err) { throw err }; });
-http.createServer(httpListener).listen(9090); 
-
-
+http.createServer(httpListener).listen(9090);
