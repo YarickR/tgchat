@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+
+	<meta charset="utf-8">
+
+	<title>Chats</title>
+	<meta name="description" content="">
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<meta property="og:image" content="path/to/image.jpg">
+	<link rel="shortcut icon" href="img/favicon/favicon.ico" type="image/x-icon">
+	<link rel="apple-touch-icon" href="img/favicon/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="img/favicon/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="img/favicon/apple-touch-icon-114x114.png">
+
+	<!-- Chrome, Firefox OS and Opera -->
+	<meta name="theme-color" content="#000">
+	<!-- Windows Phone -->
+	<meta name="msapplication-navbutton-color" content="#000">
+	<!-- iOS Safari -->
+	<meta name="apple-mobile-web-app-status-bar-style" content="#000">
+
+	<link rel="stylesheet" href="css/main.min.css">
+
+</head>
+
+<body>
+
+	<div class="wrap">
+		<div class="header">
+			<form class="search-form">
+				<input class="search-chat" type="text" name="search_chat" placeholder="Чат">
+				<input class="search-user" type="text" name="search_user" placeholder="Человек">
+				<input class="search-term" type="text" name="search_term" placeholder="Search term">
+				<input type="submit" value="Search">
+			</form>
+		</div>
+		<div class="content">
+			<div class="content-left">
+				<div class="chat-list">
+					<div class="chats-list-wrap">
+						<!-- chats here -->
+					</div>
+				</div>
+			</div>
+			<div class="content-right">
+
+			</div>
+		</div>
+	</div>
+
+
+	<script id="message-template" type="text/template">
+		<div class="message-wrap message-wrap-with-author message-id-{{chatId}}-{{messageId}}" data-msg-id="{{messageId}}">
+			<div class="message">
+				<div class="message__author">
+					{{author}}
+				</div>
+				<div class="message__text">
+					{{{text}}}
+				</div>
+				<div class="message__time">
+					{{time}}
+				</div>
+			</div>
+		</div>
+	</script>
+
+	<script id="message-template-without-author" type="text/template">
+		<div class="message-wrap message-wrap-without-author message-id-{{chatId}}-{{messageId}}" data-msg-id="{{messageId}}">
+			<div class="message">
+				<div class="message__text">
+					{{{text}}}
+				</div>
+				<div class="message__time">
+					{{time}}
+				</div>
+			</div>
+		</div>
+	</script>
+
+	<script id="chat-list" type="text/template">
+		<div class="chat-list__item js-chat-list-item" data-chat-id="{{chatId}}">
+			<div class="chat-list__item-name">
+				{{chatName}}
+			</div>
+			<!--<br>
+			<div class="chat-list__item-last-message">
+				{{{lastMessage}}}
+			</div>-->
+		</div>
+	</script>
+
+	<script id="chat" type="text/template">
+		<div class="chat js-chat chat-id-{{chatId}}">
+			<div class="chat__header">
+				<div class="chat-name">{{chatName}}</div>
+			</div>
+			<div class="chat__messages">
+				<div class="chat__messages-wrap">
+
+					<!-- MESSAGES HERE -->
+
+				</div>
+			</div>
+		</div>
+	</script>
+
+	<script id="chat-end" type="text/template">
+		<div class="chat-end-wrap">
+			{{text}}
+		</div>
+	</script>
+
+	<script id="chat-date" type="text/template">
+		<div class="chat-date-wrap">
+			{{formattedDate}}
+		</div>
+	</script>
+
+
+	<script src="js/libs.min.js"></script>
+	<script src="js/common.js"></script>
+
+
+
+
+</body>
+</html>
