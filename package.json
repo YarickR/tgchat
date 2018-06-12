@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "http": "0.0.0",
+    "mysql": "^2.15.0",
+    "querystring": "^0.2.0"
+  }
+}
