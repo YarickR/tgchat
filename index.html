@@ -32,11 +32,11 @@
 
 	<div class="wrap">
 		<div class="header">
-			<form class="search-form">
-				<input class="search-chat" type="text" name="search_chat" placeholder="Чат">
-				<input class="search-user" type="text" name="search_user" placeholder="Человек">
-				<input class="search-term" type="text" name="search_term" placeholder="Search term">
-				<input type="submit" value="Search">
+			<form class="search-form" id="search_form" >
+				<input class="search-chat" type="text" id="search_chat" placeholder="Группа">
+				<input class="search-user" type="text" id="search_user" placeholder="Отправитель">
+				<input class="search-term" type="text" id="search_term" placeholder="Ключевые слова">
+				<input type="submit" value="Search" >
 			</form>
 		</div>
 		<div class="content">
@@ -48,24 +48,29 @@
 				</div>
 			</div>
 			<div class="content-right">
+				<div class="chat js-chat">
+					<div class="chat__messages" id="chat__messages">
+						<div class="chat__messages-wrap" id="messages">
+							<!-- MESSAGES HERE -->
 
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
 
+	<script id="group-name-template" type="text/template">
+		<div class="chat_list__item" data-chatgroup-id="{{chatgroup_id}}">			
+				<div class="chat__group-name">{{chatgroup_name}}</div>
+		</div>
+	</script>
 
 	<script id="message-template" type="text/template">
 		<div class="message-wrap message-wrap-with-author message-id-{{chatId}}-{{messageId}}" data-msg-id="{{messageId}}">
 			<div class="message">
-				<div class="message__author">
-					{{author}}
-				</div>
-				<div class="message__text">
-					{{{text}}}
-				</div>
-				<div class="message__time">
-					{{time}}
-				</div>
+				<div class="message__header"><span class="message__time">{{time}}</span><span class="message__author">{{author}}&nbsp;»</span></div>
+				<div class="message__text">{{{text}}}</div>
 			</div>
 		</div>
 	</script>
@@ -73,12 +78,7 @@
 	<script id="message-template-without-author" type="text/template">
 		<div class="message-wrap message-wrap-without-author message-id-{{chatId}}-{{messageId}}" data-msg-id="{{messageId}}">
 			<div class="message">
-				<div class="message__text">
-					{{{text}}}
-				</div>
-				<div class="message__time">
-					{{time}}
-				</div>
+				<div class="message__text">{{{text}}}</div>
 			</div>
 		</div>
 	</script>
@@ -100,7 +100,7 @@
 			<div class="chat__header">
 				<div class="chat-name">{{chatName}}</div>
 			</div>
-			<div class="chat__messages">
+			<div class="chat__messages" id="chat__messages">
 				<div class="chat__messages-wrap">
 
 					<!-- MESSAGES HERE -->
@@ -125,9 +125,6 @@
 
 	<script src="js/libs.min.js"></script>
 	<script src="js/common.js"></script>
-
-
-
-
+	<script language="javascript">$(document).ready(function() { $('.search-form').trigger('submit'); });</script>
 </body>
 </html>

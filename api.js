@@ -41,14 +41,21 @@ async function apiGetUsers(body) {
 async function apiGetChats(body) {
   var req = qs.parse(body);
   var ret = [];
+  var orderByMap  = { "na": "name asc", "nd": "name desc", "ma": "mtime asc", "md": "mtime desc" };
   if ((req['chatgroup_mask'] != undefined) && (typeof req['chatgroup_mask'] == 'string')) {
     var pR, fields;
+    var orderBy = 'mtime desc';
+    if ((req['order_by'] != undefined) && (typeof req['order_by'] == 'string')) {
+      orderBy = orderByMap[req['order_by']] != undefined ? orderByMap[req['order_by']] : orderBy;
+    };
     try {
-      [ pR, fields ] = await queryDB("select * from chatgroups where ignored = 0 and lower(name) REGEXP ? " , [ req.chatgroup_mask ]);
+      console.log("Searching " + req.chatgroup_mask);
+      [ pR, fields ] = await queryDB("select * from chatgroups where ignored = 0 and lower(name) REGEXP ? order by " + orderBy , [ req.chatgroup_mask.toLowerCase() ]);
     } catch (e) {
       console.log(e);
       return ret;
     };
+    console.log(pR);
     while (pR.length > 0) {
       var row = pR.shift();
       ret.push({ 'id': row.id, 'name': row.name});
@@ -63,7 +70,7 @@ async function apiGetMsgs(body) {
   var ret = [];
   var conds = [];
   var condValues = [];
-  var order = "ASC";
+  var order = "DESC";
   if ((req['user_mask'] != undefined) && (typeof req['user_mask'] == 'string')) {
     var userMask = req.user_mask.startsWith('@') ? req.user_mask.substr(1) : req.user_mask;
     conds.push(req.user_mask.startsWith('@') ? "lower(u.username) REGEXP ? " : "lower(u.name) REGEXP ? ");
@@ -87,12 +94,12 @@ async function apiGetMsgs(body) {
   };
   if (req['start_msgid'] != undefined) {
     conds.push("m.id >= ?");
+    order = "ASC";
     condValues.push(parseInt(req['start_msgid']));
   } else
   if (req['end_msgid']) {
     conds.push("m.id <= ?");
     condValues.push(parseInt(req['end_msgid']));
-    order = "DESC";
   };
   // Assembling all the conditions, considering ignored groups and users;
   var q = "select c.id as chatgroup_id, c.name as chatgroup_name, u.id as sender_id, u.name as sender_name,  u.username as sender_username, m.id as msgid, m.timestamp as ts, m.contents as contents" ;
@@ -100,11 +107,12 @@ async function apiGetMsgs(body) {
   q += conds.length > 0 ? " and " + conds.join(" and ") : "";
   q += " and m.sender_id=u.id and m.group_id=c.id order by m.id " + order + " limit 100";
   console.log(q);
-  console.log(condValues);
+  console.log(condValues  );
   try  {
     var pR, fields;
     [ pR, fields ]  = await queryDB(q ,  condValues);
   } catch (e) {
+    console.log("Database query exception:");
     console.log(e);
     return ret;
   };
@@ -115,6 +123,7 @@ async function apiGetMsgs(body) {
     fields.forEach((field) => { retRow[field.name] = row[field.name]; });
     ret.push(retRow);
   };
+  ret.sort(function (a, b) { return a['msgid'] < b['msgid'] ? -1 : a['msgid'] > b['msgid'] ? 1 : 0; });
   console.log(ret);
   return ret;
 }
