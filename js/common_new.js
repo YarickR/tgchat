@@ -5,6 +5,7 @@ $(function() {
     var user_mask;
     var chatgroup_mask;
     var prevScrollPosition = -1;
+    var firstMsgId = 0, lastMsgId = 0;
 
     /*
 
@@ -455,21 +456,6 @@ $(function() {
                 //console.log('данные получены', data);
 
                 data.forEach(function(item, index) {
-                    //добавляем сообщение к нужному чату
-
-                    /* формат пришедших данных
-                        item = {
-                            chatgroup_id: 1116881062,
-                            chatgroup_name: "A1/A1EU - dev/QA/magic",
-                            contents: "пример сообщения",
-                            msgid: 19,
-                            sender_id: 276687073,
-                            sender_name: "Andrey Polosin",
-                            sender_username: "mehabyte",
-                            ts: 1516087153
-                        }
-                    */
-
                     var curChatIndex = getChatIndexById(item.chatgroup_id);
                     var cur_message = {
                         text: selectChatText(item.contents, search_term),
@@ -511,24 +497,6 @@ $(function() {
                         chatId: itemChat.chat_id
                     });
                     $(".content-right").append(html);
-
-                    //генерируем сообщения во вкладках сообщений
-                    /*itemChat.messages.forEach(function(itemMessage, index) {
-                        var template = $('#message-template').html();
-
-                        var data = {
-                            text: itemMessage.text,
-                            author: itemMessage.author,
-                            time: itemMessage.time,
-                            leftRightClass: itemMessage.leftRightClass,
-                            chatId: itemChat.chat_id,
-                            messageId: itemMessage.messageId
-                        };
-                        var html = Mustache.to_html(template, data);
-
-                        $('.chat-id-' + itemChat.chat_id + ' .chat__messages-wrap').append(html);
-
-                    });*/
                     renderMessages(itemChat.chat_id, itemChat.messages);
                 });
 
