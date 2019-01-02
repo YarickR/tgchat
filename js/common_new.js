@@ -1,70 +1,13 @@
 $(function() {
 
-    var chats = [];
+    var chatGroups = [];
     var search_term;
     var user_mask;
-    var chatgroup_mask;
+    var chatGroupMask = '.*';
     var prevScrollPosition = -1;
     var firstMsgId = 0, lastMsgId = 0;
-
-    /*
-
-    [{
-        chat_id: 123,
-        chatName: 'chat name',
-        lastMessageId: 123,
-        isEnded: false, // показывает загружать ли еще сообщения или уже достигнут конец
-        messages: [
-            {
-                text: 'Text messages',
-                author: 'Yaroslav 2',
-                time: '12:01',
-                messageId: 12
-            },
-            {
-                text: 'Text messages',
-                author: 'Yaroslav',
-                time: '12:02',
-                messageId: 13
-            }
-        ]
-    },{
-        ...
-    }]
-
-    */
-
-    function getChatIndexById(chatId) {
-        /*
-        возвращаем index чата в массиве чатов по полученному chatId
-        */
-
-        var retVal = -1;
-        chats.forEach(function(item, index) {
-            if (item.chat_id === chatId) {
-                retVal = index;
-            }
-        });
-        return retVal;    }
-
-    function getMessageIndexByChatIdAndMessageId(chatId, messageId) {
-        /*
-         возвращаем index сообщения по его id и chat id
-        */
-        var chatIndex = getChatIndexById(chatId);
-        if (chatIndex === -1) {
-            return -1;
-        }
-
-        var retVal = -1;
-        chats[chatIndex].messages.forEach(function(item, index) {
-            if (item.messageId === messageId) {
-                retVal = index;
-            }
-        });
-        return retVal;
-    }
-
+    var chatGroupListSort = "ma";
+  
     function getCountDays(ts) {
         var date = new Date(ts*1000);
         var now = new Date();
@@ -423,27 +366,36 @@ $(function() {
         });
     }
 
+    function updateChatList(dataObj) {
+      $('.chats-list-wrap').html = '';
+      var pos = 0;
+      dataObj.forEach(function(item, index) {
+        if (typeof(chatGroups[item.id]) === "undefined") {
+          chatGroups[item.id] = { name: item.name, pos: pos, mtime: item.mtime, selected: 0 };
+        };
+        chatGroups[item.id].pos = pos;
+        chatGroups[item.id].mtime = item.mtime;
+        pos = pos + 1;
+        var template = $('#chat-list').html();
+        var html = Mustache.to_html(template, {
+                        chatId: item.id,
+                        chatName: item.name,
+                    });
+        $('.chats-list-wrap').append(html);
+      });
+    }
 
-    /*
-    listener при клике на чат: $(document).on('event', 'selector on objects', callback)
-    обрабатывает объекты, созданные после создания listener-а
-    (то есть при создании объекта не надо на него вешать listener)
-    */
-    $(document).on("click", ".js-chat-list-item", function() {
-        // парсим из html id чата
-        var chatId = parseInt($(this).attr("data-chat-id"));
+    function retrieveChatListFromServer(dataObj) {
+       
+       chatGroups.forEach(function (item
+       $.ajax( {  uri: "api/get_chats/", 
+                  data: dataObj, 
+                  type: "POST", 
+                  dataType: "json", 
+                  success: updateChatList(data)
+               });
+    }
 
-        // css свойства для выделения активного чата
-            //удаление active класса со всех чатов
-            $(".js-chat-list-item").removeClass("active");
-            $(this).addClass("active");
-            // добавление active класса текущему чату
-            $(".js-chat").removeClass("active");
-            $(".js-chat.chat-id-"+chatId).addClass("active");
-
-        // догрузка сообщений
-        chatSelect(chatId);
-    });
 
 
     function makeFirstAjax(dataObj) {
@@ -508,6 +460,20 @@ $(function() {
             }
         });
     }
+    $('.js-chat.chat__messages').on('scroll', function() {
+      alert("scroll");    
+    });
+
+    function chatToggleSelected(chatId) {
+      chatGroups[chatId].selected = chatGroups[chatId].selected ? true : false;
+
+    }
+    $(document).on("click", ".js-chat-list-item", function() {
+      // парсим из html id чата
+      var chatId = parseInt($(this).attr("data-chat-id"));
+      $(this).toggleClass("active");
+      chatToggleSelected(chatId);
+    });
 
     // форма поиска
     $('.search-form').on('submit', function(e) {
@@ -568,6 +534,13 @@ $(function() {
         },
         deferRequestBy: 300
     });
-
+    $('.chats-list-refresh-btn').on('click', function(e) {
+        // выполняем запрос
+        retrieveChatListFromServer({
+            chatgroup_mask: chatGroupMask || '.*',
+            selected_groups: {},
+            order_by: chatGroupListSort
+        });
+    });
 
 });

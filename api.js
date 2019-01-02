@@ -58,7 +58,7 @@ async function apiGetChats(body) {
     console.log(pR);
     while (pR.length > 0) {
       var row = pR.shift();
-      ret.push({ 'id': row.id, 'name': row.name});
+      ret.push({ 'id': row.id, 'name': row.name, 'mtime': row.mtime});
     };
   };
   console.log(ret);

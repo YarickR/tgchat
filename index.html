@@ -42,6 +42,9 @@
 		<div class="content">
 			<div class="content-left">
 				<div class="chat-list">
+					<div class="chats-list-refresh">
+						<input type="button" class="chats-list-refresh-btn" id="chats_list_refresh_btn">
+					</div>
 					<div class="chats-list-wrap">
 						<!-- chats here -->
 					</div>
@@ -96,7 +99,7 @@
 	</script>
 
 	<script id="chat" type="text/template">
-		<div class="chat js-chat chat-id-{{chatId}}">
+		<div class="chat js-chat">
 			<div class="chat__header">
 				<div class="chat-name">{{chatName}}</div>
 			</div>
@@ -125,6 +128,9 @@
 
 	<script src="js/libs.min.js"></script>
 	<script src="js/common_new.js"></script>
-	<script language="javascript">$(document).ready(function() { $('.search-form').trigger('submit'); });</script>
+	<script language="javascript">$(document).ready(function() { 
+    $('.chats-list-refresh-btn').trigger('click'); 
+    $('.search-form').trigger('submit'); 
+  });</script>
 </body>
 </html>
