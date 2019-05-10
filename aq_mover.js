@@ -15,7 +15,23 @@ function queryDB(query, args) {
 }
 
 function runTheLoop(rc) {
-  var lastChDEfVersion = 0;
+  var lastChDefVer = 0;
+  var stopTheLoop = false;
+  var channelDefs = {};
+  while (!stopTheLoop) {
+    let nextAlert = getNextAlert(rc);
+    let nextMsgId = getNextMsgID(rc);
+    let settings = getSettings(rc);
+    if (settings.CHANNEL_VERSION > lastChDefVer) {
+      channelDefs = getChannelDefs(rc)
+    };
+    if (settings.SHUTDOWN) {
+      stopTheLoop = true;
+      break;
+    };
+    alert["msgid"] = nextMsgId;
+    
+  }
   rc.hgetall("SETTINGS", function (err, reply) { console.log(err); console.log(reply); } )
   setTimeout(function() {
   }, 10000);
