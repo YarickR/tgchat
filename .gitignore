@@ -1,3 +1,6 @@
+.DS_Store
+tgchat.sublime-project
+tgchat.sublime-workspace
 nohup.out
 config.js
 package-lock.json
