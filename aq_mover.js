@@ -58,7 +58,7 @@ async function runTheLoop(rc, msc) {
 redis.debug_mode = true;
 var rc = redis.createClient({ url: config.redisConfig.url || "redis://127.0.0.1:6379/", connect_timeout: 2000 });
 var msc = mysql.createConnection(config.mysqlConfig);
-msc.connect((err) => { console.error(err + " connecting to mysql at " + config.mysqlConfig); process.exit(2);});
+//msc.connect((err) => { console.error(err + " connecting to mysql at " + config.mysqlConfig); process.exit(2);});
 rc.on('ready', function (e) { 
   console.log("Connected to redis at " + (config.redisConfig.url || "redis://127.0.0.1:6379/" + " and mysql at " + config.mysqlConfig)); 
   runTheLoop(rc, msc);
