@@ -31,11 +31,27 @@ async function getChannelDefs(rc, chDefsKey = "CHANNEL_DEFS") {
   return new Promise((resolve, reject) => { rc.lrange(chDefsKey, 0, -1, (err, result) => { if (err) reject(err); else resolve(result); })});
 }
 
+async function connectToMySQL(msc) {
+  return new Promise((resolve,reject) = > { 
+    msc.connect((err) => { 
+      if (err) { 
+        console.error(err + " connecting to mysql at " + config.mysqlConfig); 
+        reject(err);
+      } else {
+        resolve(true);
+      }
+    });
+}
+
 async function runTheLoop(rc, msc) {
   var lastChDefVer = 0;
   var stopTheLoop = false;
   var channelDefs = {};
-  console.log(rc);
+  try {
+    await connectToMySQL(msc);
+  } catch (e) {
+    stopTheLoop = true;
+  };
   while (!stopTheLoop) {
     nextAlert = await getNextAlert(rc);
     let nextMsgId = getNextMsgID(rc);
@@ -58,12 +74,12 @@ async function runTheLoop(rc, msc) {
 redis.debug_mode = true;
 var rc = redis.createClient({ url: config.redisConfig.url || "redis://127.0.0.1:6379/", connect_timeout: 2000 });
 var msc = mysql.createConnection(config.mysqlConfig);
-//msc.connect((err) => { console.error(err + " connecting to mysql at " + config.mysqlConfig); process.exit(2);});
 rc.on('ready', function (e) { 
-  console.log("Connected to redis at " + (config.redisConfig.url || "redis://127.0.0.1:6379/" + " and mysql at " + config.mysqlConfig)); 
+  console.log("Connected to redis at " + (config.redisConfig.url || "redis://127.0.0.1:6379/")); 
   runTheLoop(rc, msc);
 });
 rc.on('error', function (e) { 
     console.error(e + "\nConnection URL used:" +  (config.dbConfig.url || "redis://127.0.0.1:6379/"));
     process.exit(1);
   });
+console.log("end of main module, entering the async event loop");
