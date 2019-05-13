@@ -1,7 +1,8 @@
 {
   "dependencies": {
     "http": "0.0.0",
-    "mysql": "^2.15.0",
+    "jsep": "^0.3.4",
+    "mysql": "^2.17.1",
     "querystring": "^0.2.0",
     "redis": "^2.8.0"
   }
