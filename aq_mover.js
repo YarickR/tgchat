@@ -78,7 +78,7 @@ function parseChannelDefs(chDefsList, lastChDefVer, newChDefsVer) {
       };
       _rl.push({ "src": _rule.src, "cond": _tree });
     };
-    if (!_inv) {
+    if ((!_inv) && (_rl.len > 0)) {
       ret.push({ "id": _cd.id, "version": _cd.version, "rules": _rl});
     };
   }
