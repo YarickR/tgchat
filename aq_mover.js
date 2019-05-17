@@ -1,5 +1,6 @@
 const redis = require('redis');
 const mysql = require('mysql');
+const jsep = require('jsep');
 
 const config = require('./aqm_config');
 
@@ -46,7 +47,42 @@ async function connectToMySQL(msc) {
 }
 
 function parseChannelDefs(chDefsList, lastChDefVer, newChDefsVer) {
-  return false;
+  var ret = [];
+  var reqdProps = ["id", "version", "rules"];
+  for (let chDef of chDefsList[1]) {
+    let _cd = JSON.parse(chDef);
+    let _inv = false;
+    let _pr = undefined;
+    for (_pr of reqdProps) {
+      if (_cd.hasOwnProperty(_pr) == false) {
+        _inv = true;
+        break;
+      };
+    };
+    if (_inv) { // invalid rule ,  property is missing
+      console.error("Rule " + chDef +  " missing required property " + _p)
+      continue;
+    };
+    if (_cd.version <= lastChDefVer) {
+      // Rule has not been changed, skip
+      continue;
+    };
+    var _rl = []; // list of rules
+    for (let _rule of _cd.rules) {
+      try {
+        let _tree = jsep(_rule.cond);
+      } catch (e) {
+        console.error("Failed to parse rule " + _rule.cond + " of channel def #" +_cd.id);
+        _inv = true;
+        break;
+      };
+      _rl.push({ "src": _rule.src, "cond": _tree });
+    };
+    if (!_inv) {
+      ret.push({ "id": _cd.id, "version": _cd.version, "rules": _rl});
+    };
+  }
+  return ret;
 }
 
 async function runTheLoop(rc, msc) {
@@ -90,8 +126,13 @@ async function runTheLoop(rc, msc) {
       chDefsList = await getChannelDefs(rc);
       let newChDefs = parseChannelDefs(chDefsList, lastChDefVer, settings.CHANNNEL_VERSION);
       if ( newChDefs != false) {
+        newChDefs.forEach(newChDefs, function (def, idx) { 
+            if (def.version > lastChDefVer) {
+              mergeChDef(channelDefs, def);
+            };
+          }
+        );
         lastChDefVer = settings.CHANNEL_VERSION;
-        channelDefs = newChDefs;
       } else {
         console.log("Failed to parse new channel defs , continuing with version " + lastChDefVer);
       };
@@ -107,6 +148,7 @@ async function runTheLoop(rc, msc) {
 }
 
 redis.debug_mode = true;
+jsep.addBinaryOp("~=", 6); // Check jsep source 
 var rc = redis.createClient({ url: config.redisConfig.url || "redis://127.0.0.1:6379/", connect_timeout: 2000 });
 var msc = mysql.createConnection(config.mysqlConfig);
 rc.on('ready', function (e) { 
