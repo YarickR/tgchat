@@ -46,47 +46,76 @@ async function connectToMySQL(msc) {
   });
 }
 
-function parseChannelDefs(chDefsList, lastChDefVer, newChDefsVer) {
+function parseChannelDefs(chDefsList, lastChDefVer) {
   var ret = [];
-  var reqdProps = ["id", "version", "rules"];
+  const reqdProps = ["id", "version", "rules"];
   for (let chDef of chDefsList[1]) {
-    let _cd = JSON.parse(chDef);
-    let _inv = false;
-    let _pr = undefined;
-    for (_pr of reqdProps) {
-      if (_cd.hasOwnProperty(_pr) == false) {
-        _inv = true;
-        break;
-      };
+    let cd = JSON.parse(chDef);
+    let missingRules = [];
+    reqdProps.forEach((prop) => {  if (cd.hasOwnProperty(prop) == false) missingRules.push(prop); });
+    if (missingRules.length > 0) {
+      console.error("Channel " +  chDef  +  " missing required properties: " + prop);
+      continue;     
     };
-    if (_inv) { // invalid rule ,  property is missing
-      console.error("Rule " + chDef +  " missing required property " + _p)
-      continue;
-    };
-    if (_cd.version <= lastChDefVer) {
+    if (cd.version <= lastChDefVer) {
       // Rule has not been changed, skip
       continue;
     };
-    var _rl = []; // list of rules
-    for (let _rule of _cd.rules) {
-      try {
-        let _tree = jsep(_rule.cond);
-      } catch (e) {
-        console.error("Failed to parse rule " + _rule.cond + " of channel def #" +_cd.id);
-        _inv = true;
-        break;
+    let ruleList = [];
+    cd.rules.forEach(function (_rule) {      
+      if (((cd.id != 0) && (_rule.src >= _cd.id)) || ((cd.id == 0) && (_rule.src != 0))) {
+        console.error("Channel #"  + cd.id + " potential channel filter loop at rule with src " + _rule.src);
+        continue; // crude attempt at not allowing filter loops; also skipping entire channel filter 
       };
-      _rl.push({ "src": _rule.src, "cond": _tree });
-    };
-    if ((!_inv) && (_rl.len > 0)) {
-      ret.push({ "id": _cd.id, "version": _cd.version, "rules": _rl});
+      let tree = undefined;
+      try { _tree = jsep(_rule.cond); } catch (e) {
+        console.error("Failed to parse rule " + _rule.cond + " of channel def #" +_cd.id);
+        continue; // skip this channel definition completely;
+      };
+      ruleList.push({ "src": _rule.src, "cond": _tree });
+    });
+    if (ruleList.length > 0) {
+      ret.push({ "id": cd.id, "version": cd.version, "rules": ruleList});
     };
   }
   return ret;
 }
 
+function mergeChDef(channelDefs, def) {
+  // here we have full current array (yes, this is an array) of actual channel filters, and new channel filter that should replace current entry
+  // first , let's compare sources for current and new entry, to ensure we won't have broken links 
+  var cdPs = []; // current def parents
+  var ndPs = []; // new def parents
+  def.rules.forEach((_r) => ndPs.push[_r.src]);
+  var cE = channelDefs[def.id]; // current entry 
+  if (cE != undefined) {
+    cE.rules.forEach((_r) => cdPs.push[_r.src]);
+  };
+  // Apologies. We're keeping array of destinations (channel filters on the next level) in dsts array for each source channel filter . 
+  // If current version of channel filter has some channel as a source in any of it's rules, and new version does not have that, 
+  // then we need to remove channeld id from that source channel's dsts array
+  cdPs.forEach((_id) => { if !ndPs.includes(_id) {
+        cdP = channelDefs[_id];
+        cdP.dsts = cdP.dsts.filter(__id => __id != def.id ); 
+      };
+    }); 
+    // And ensure new sources have their dsts properly updated 
+  ndPs.forEach((_id) => {
+    cdP = channelDefs[_id];
+    if (cdP != undefined) {
+      if (!cdP.dsts.includes(def.id) {
+        cdP.dsts.push(def.id);
+      };
+    } else {
+      console.error("channel filter #" +  def.id + " lists missing channel filter #" + _id + " as source; this won't work" );
+    };
+  });
+  // Ok we linked this filter with parent sources
+  channelDefs[def.id] = def;
+}
+
 async function runTheLoop(rc, msc) {
-  var lastChDefVer = 0;
+  var channelDefsVersion = 0;
   var stopTheLoop = false;
   var channelDefs = {};
   var nextMsgID = 0;
@@ -122,17 +151,12 @@ async function runTheLoop(rc, msc) {
       console.log("next alert:");
       console.log(_a);
     };
-    if (settings.CHANNEL_VERSION > lastChDefVer) {
-      chDefsList = await getChannelDefs(rc);
-      let newChDefs = parseChannelDefs(chDefsList, lastChDefVer, settings.CHANNNEL_VERSION);
-      if ( newChDefs != false) {
-        newChDefs.forEach(newChDefs, function (def, idx) { 
-            if (def.version > lastChDefVer) {
-              mergeChDef(channelDefs, def);
-            };
-          }
-        );
-        lastChDefVer = settings.CHANNEL_VERSION;
+    if (settings.CHANNEL_VERSION > channelDefsVersion) {
+      let _nd = await getChannelDefs(rc);
+      let newDefs = parseChannelDefs(_nd, channelDefsVersion);
+      if (newDefs != false) {
+        newDefs.forEach((def) => mergeChDef(channelDefs, def));
+        channelDefsVersion = settings.CHANNEL_VERSION;
       } else {
         console.log("Failed to parse new channel defs , continuing with version " + lastChDefVer);
       };
