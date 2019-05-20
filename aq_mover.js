@@ -114,6 +114,42 @@ function mergeChDef(channelDefs, def) {
   channelDefs[def.id] = def;
 }
 
+function processMessage(channelDefs, startChId, parentChId, msg) { // The gist of all this . Recursive, of course
+  var ret = [];
+  var counter = 0;
+  var cd = channelDefs[startChId];
+  if (cd == undefined) {
+    console.error("Unknown channel def #" + startChId );
+    return ret;
+  };
+  for (const _r of cd.rules) {
+    if (_r.src == parentChId) {
+      counter += 1; // will use that for possibly invalid src<->dst link checks
+      if (evaluateChRule(_r.cond, msg) == true) {
+        ret.push(cd.id);
+        break; // do not allow several rules in one channel filter with the same parent id. cram all conditions into one rue
+      };
+    };
+  };
+  if (ret.length > 0 ) { 
+    // Struck a match
+    for (const dstId of ret.dsts) {
+      ret = ret.concat(processMessage(channelDefs, dstId, cd.id, msg)); // recursion
+    };
+  } else {
+    if (counter == 0) {
+      console.error("Channel def #" + parentChId + " lists channel def #" + ch.id + " as destination, but no rule in latter has former as source");
+    };
+  }
+  return ret;
+}
+
+
+function evaluateChRule(jsrt, msg ) {
+  var ret = false;
+
+}
+
 async function runTheLoop(rc, msc) {
   var channelDefsVersion = 0;
   var stopTheLoop = false;
